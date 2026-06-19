@@ -20,7 +20,7 @@ const Navbar = () => {
 
   const links = [
     { name: "Home", path: "/" },
-    { name: "Browse Books", path: "/browse" },
+    { name: "Browse Books", path: "/books" },
     { name: "Dashboard", path: "/dashboard/user", icon: <FiGrid /> },
   ];
 
