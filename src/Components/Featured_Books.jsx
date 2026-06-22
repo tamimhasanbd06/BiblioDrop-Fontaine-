@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { FiArrowRight, FiBookOpen, FiRefreshCw } from "react-icons/fi";
+import Image from "next/image";
 
 export default function FeaturedBooks() {
   const [books, setBooks] = useState([]);
@@ -154,7 +155,7 @@ export default function FeaturedBooks() {
                   >
                     {/* Book Cover */}
                     <div className="relative aspect-[2/3] overflow-hidden rounded-[1.25rem] bg-slate-900 shadow-xl">
-                      <img
+                      <Image
                         src={bookImage}
                         alt={book.title || "Book cover"}
                         loading="lazy"

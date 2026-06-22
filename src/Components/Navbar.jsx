@@ -42,12 +42,8 @@ const Navbar = () => {
     () => [
       { name: "Home", path: "/", icon: <FiHome /> },
       { name: "Browse Books", path: "/books", icon: <FiBookOpen /> },
-      {
-        name: "Dashboard",
-        path: dashboardPath,
-        icon: <FiGrid />,
-        private: true,
-      },
+      {name: "About us", path: "/about", icon: <FiGrid />, private: true, },
+      {name: "Dashboard", path: dashboardPath, icon: <FiGrid />, private: true, },
     ],
     [dashboardPath]
   );
