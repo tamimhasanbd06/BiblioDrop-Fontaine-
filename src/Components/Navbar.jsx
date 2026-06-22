@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 import {
   FiMenu,
   FiX,
@@ -12,44 +13,79 @@ import {
   FiBookOpen,
   FiLogIn,
   FiUserPlus,
+  FiLogOut,
 } from "react-icons/fi";
 
 const Navbar = () => {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const { data: session, isPending } = authClient.useSession();
 
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [hidden, setHidden] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
 
-  const lastScrollY = useRef(0);
+  const user = session?.user;
+  const isLoggedIn = !!user;
+
+  const dashboardPath = useMemo(() => {
+    const role = user?.role || "user";
+
+    if (role === "admin") return "/dashboard/admin";
+    if (role === "librarian") return "/dashboard/librarian";
+
+    return "/dashboard/user";
+  }, [user?.role]);
+
+  const links = useMemo(
+    () => [
+      { name: "Home", path: "/", icon: <FiHome /> },
+      { name: "Browse Books", path: "/books", icon: <FiBookOpen /> },
+      {
+        name: "Dashboard",
+        path: dashboardPath,
+        icon: <FiGrid />,
+        private: true,
+      },
+    ],
+    [dashboardPath]
+  );
+
+  const visibleLinks = links.filter((link) => {
+    if (link.private && !isLoggedIn) return false;
+    return true;
+  });
 
   const isActive = (path) => {
     if (path === "/") return pathname === "/";
     return pathname.startsWith(path);
   };
 
-  const links = [
-    { name: "Home", path: "/", icon: <FiHome /> },
-    { name: "Browse Books", path: "/books", icon: <FiBookOpen /> },
-    { name: "Dashboard", path: "/dashboard/user", icon: <FiGrid /> },
-  ];
+  const handleLogout = async () => {
+    try {
+      setLogoutLoading(true);
+
+      await authClient.signOut();
+
+      setIsOpen(false);
+      router.push("/signin");
+      router.refresh();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      setLogoutLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
-      const current = window.scrollY;
-
-      setScrolled(current > 12);
-
-      if (current > lastScrollY.current && current > 120) {
-        setHidden(true);
-      } else {
-        setHidden(false);
-      }
-
-      lastScrollY.current = current;
+      setScrolled(window.scrollY > 12);
     };
 
     window.addEventListener("scroll", handleScroll);
+    handleScroll();
+
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -76,16 +112,22 @@ const Navbar = () => {
       {/* NAVBAR */}
       <nav
         className={`
-          fixed left-0 top-0 z-50 w-full border-b transition-all duration-300
+          z-50 w-full border-b border-white/10 bg-[#041032]
+          transition-all duration-300
           ${
             scrolled
-              ? "h-16 border-blue-100 bg-white/90 shadow-lg shadow-blue-950/5 backdrop-blur-xl"
-              : "h-20 border-transparent bg-white/75 backdrop-blur-md"
+              ? "sticky top-0 shadow-2xl shadow-blue-950/40 backdrop-blur-xl"
+              : "relative"
           }
-          ${hidden ? "-translate-y-full" : "translate-y-0"}
         `}
       >
-        <div className="mx-auto flex h-full max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-10">
+        <div
+          className={`
+            mx-auto flex max-w-[1440px] items-center justify-between px-4
+            transition-all duration-300 sm:px-6 lg:px-10
+            ${scrolled ? "h-16" : "h-20"}
+          `}
+        >
           {/* LOGO */}
           <Link
             href="/"
@@ -104,16 +146,17 @@ const Navbar = () => {
 
           {/* DESKTOP LINKS */}
           <div className="hidden items-center gap-9 lg:flex">
-            {links.map((link) => (
+            {visibleLinks.map((link) => (
               <Link
                 key={link.path}
                 href={link.path}
                 className={`
-                  group relative flex items-center gap-2 text-sm font-semibold tracking-wide transition-colors duration-300
+                  group relative flex items-center gap-2 text-sm font-extrabold tracking-wide
+                  transition-colors duration-300
                   ${
                     isActive(link.path)
-                      ? "text-blue-700"
-                      : "text-slate-600 hover:text-blue-700"
+                      ? "text-white"
+                      : "text-slate-200 hover:text-white"
                   }
                 `}
               >
@@ -122,8 +165,8 @@ const Navbar = () => {
                     text-base transition-colors duration-300
                     ${
                       isActive(link.path)
-                        ? "text-blue-700"
-                        : "text-slate-500 group-hover:text-blue-700"
+                        ? "text-white"
+                        : "text-slate-300 group-hover:text-white"
                     }
                   `}
                 >
@@ -132,10 +175,10 @@ const Navbar = () => {
 
                 <span>{link.name}</span>
 
-                {/* Premium small underline only for active/hover */}
                 <span
                   className={`
-                    absolute -bottom-2 left-0 h-[2px] rounded-full bg-blue-600 transition-all duration-300
+                    absolute -bottom-2 left-0 h-[2px] rounded-full bg-blue-300
+                    transition-all duration-300
                     ${
                       isActive(link.path)
                         ? "w-full opacity-100"
@@ -149,33 +192,56 @@ const Navbar = () => {
 
           {/* DESKTOP AUTH BUTTONS */}
           <div className="hidden items-center gap-3 lg:flex">
-            <Link
-              href="/signin"
-              className={`
-                rounded-full border px-5 py-2.5 text-sm font-semibold transition-all duration-300
-                ${
-                  isActive("/signin")
-                    ? "border-blue-700 bg-blue-700 text-white shadow-md shadow-blue-700/20"
-                    : "border-blue-200 bg-white text-blue-700 hover:border-blue-600 hover:bg-blue-50 hover:shadow-md hover:shadow-blue-950/5"
-                }
-              `}
-            >
-              Sign In
-            </Link>
+            {isPending ? (
+              <div className="h-10 w-28 animate-pulse rounded-full bg-white/15" />
+            ) : isLoggedIn ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={logoutLoading}
+                className="
+                  inline-flex items-center gap-2 rounded-full bg-gradient-to-r
+                  from-red-500 to-rose-600 px-6 py-2.5 text-sm font-extrabold
+                  text-white shadow-lg shadow-red-600/20 transition-all duration-300
+                  hover:-translate-y-0.5 hover:shadow-xl hover:shadow-red-600/30
+                  disabled:cursor-not-allowed disabled:opacity-70
+                "
+              >
+                <FiLogOut />
+                {logoutLoading ? "Logging out..." : "Logout"}
+              </button>
+            ) : (
+              <>
+                <Link
+                  href="/signin"
+                  className={`
+                    rounded-full border px-5 py-2.5 text-sm font-extrabold
+                    transition-all duration-300
+                    ${
+                      isActive("/signin")
+                        ? "border-white bg-white text-[#041032] shadow-md"
+                        : "border-white/30 bg-white/5 text-white hover:border-white hover:bg-white hover:text-[#041032]"
+                    }
+                  `}
+                >
+                  Sign In
+                </Link>
 
-            <Link
-              href="/signup"
-              className={`
-                rounded-full px-6 py-2.5 text-sm font-bold text-white transition-all duration-300
-                ${
-                  isActive("/signup")
-                    ? "bg-blue-900 shadow-md shadow-blue-900/20"
-                    : "bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 shadow-lg shadow-blue-700/25 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-700/30"
-                }
-              `}
-            >
-              Sign Up
-            </Link>
+                <Link
+                  href="/signup"
+                  className={`
+                    rounded-full px-6 py-2.5 text-sm font-extrabold transition-all duration-300
+                    ${
+                      isActive("/signup")
+                        ? "bg-white text-[#041032] shadow-md"
+                        : "bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-700/25 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-700/30"
+                    }
+                  `}
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
 
           {/* MOBILE HAMBURGER */}
@@ -183,8 +249,8 @@ const Navbar = () => {
             onClick={() => setIsOpen(true)}
             className="
               inline-flex h-11 w-11 items-center justify-center rounded-full
-              border border-blue-100 bg-white text-blue-700 shadow-sm
-              transition hover:bg-blue-50 hover:text-blue-800 lg:hidden
+              border border-white/15 bg-white/10 text-white shadow-sm
+              transition hover:bg-white hover:text-[#041032] lg:hidden
             "
             aria-label="Open menu"
           >
@@ -197,7 +263,8 @@ const Navbar = () => {
       <div
         onClick={() => setIsOpen(false)}
         className={`
-          fixed inset-0 z-[70] bg-slate-950/45 backdrop-blur-sm transition-opacity duration-300 lg:hidden
+          fixed inset-0 z-[70] bg-slate-950/55 backdrop-blur-sm
+          transition-opacity duration-300 lg:hidden
           ${isOpen ? "visible opacity-100" : "invisible opacity-0"}
         `}
       />
@@ -206,14 +273,14 @@ const Navbar = () => {
       <aside
         className={`
           fixed right-0 top-0 z-[80] h-full w-[84%] max-w-[370px]
-          border-l border-blue-100 bg-white shadow-2xl shadow-slate-950/20
+          border-l border-white/10 bg-white shadow-2xl shadow-slate-950/20
           transition-transform duration-300 ease-out lg:hidden
           ${isOpen ? "translate-x-0" : "translate-x-full"}
         `}
       >
         <div className="flex h-full flex-col">
           {/* DRAWER HEADER */}
-          <div className="flex items-center justify-between border-b border-blue-100 px-5 py-5">
+          <div className="flex items-center justify-between border-b border-white/10 bg-[#041032] px-5 py-5">
             <Link
               href="/"
               className="flex items-center gap-2"
@@ -232,8 +299,7 @@ const Navbar = () => {
               onClick={() => setIsOpen(false)}
               className="
                 inline-flex h-10 w-10 items-center justify-center rounded-full
-                bg-blue-50 text-blue-700 transition
-                hover:bg-blue-700 hover:text-white
+                bg-white/10 text-white transition hover:bg-white hover:text-[#041032]
               "
               aria-label="Close menu"
             >
@@ -244,7 +310,7 @@ const Navbar = () => {
           {/* DRAWER BODY */}
           <div className="flex-1 overflow-y-auto px-5 py-6">
             <div className="mb-6 rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.25em] text-blue-600">
+              <p className="text-xs font-extrabold uppercase tracking-[0.25em] text-blue-600">
                 BiblioDrop
               </p>
 
@@ -255,23 +321,40 @@ const Navbar = () => {
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 Browse books, request delivery, and manage your reading journey.
               </p>
+
+              {isLoggedIn && (
+                <div className="mt-4 rounded-2xl bg-white p-3 ring-1 ring-blue-100">
+                  <p className="text-sm font-extrabold text-slate-900">
+                    {user?.name || "BiblioDrop User"}
+                  </p>
+
+                  <p className="mt-0.5 truncate text-xs text-slate-500">
+                    {user?.email}
+                  </p>
+
+                  <p className="mt-2 inline-flex rounded-full bg-blue-50 px-3 py-1 text-[11px] font-extrabold capitalize text-blue-700">
+                    {user?.role || "user"}
+                  </p>
+                </div>
+              )}
             </div>
 
-            <p className="mb-4 text-xs font-bold uppercase tracking-[0.25em] text-slate-400">
+            <p className="mb-4 text-xs font-extrabold uppercase tracking-[0.25em] text-slate-400">
               Navigation
             </p>
 
             <div className="space-y-3">
-              {links.map((link) => (
+              {visibleLinks.map((link) => (
                 <Link
                   key={link.path}
                   href={link.path}
                   className={`
-                    flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-bold transition-all duration-300
+                    flex w-full items-center gap-3 rounded-2xl px-4 py-3.5
+                    text-sm font-extrabold transition-all duration-300
                     ${
                       isActive(link.path)
-                        ? "bg-blue-700 text-white shadow-lg shadow-blue-700/20"
-                        : "bg-slate-50 text-slate-700 ring-1 ring-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:ring-blue-100"
+                        ? "bg-[#041032] text-white shadow-lg shadow-blue-950/20"
+                        : "bg-slate-50 text-slate-800 ring-1 ring-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:ring-blue-100"
                     }
                   `}
                 >
@@ -295,40 +378,63 @@ const Navbar = () => {
 
             <div className="my-6 h-px bg-blue-100" />
 
-            <p className="mb-4 text-xs font-bold uppercase tracking-[0.25em] text-slate-400">
+            <p className="mb-4 text-xs font-extrabold uppercase tracking-[0.25em] text-slate-400">
               Account
             </p>
 
             <div className="space-y-3">
-              <Link
-                href="/signin"
-                className={`
-                  flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm font-bold transition-all duration-300
-                  ${
-                    isActive("/signin")
-                      ? "bg-blue-700 text-white shadow-lg shadow-blue-700/20"
-                      : "border border-blue-100 bg-white text-blue-700 hover:bg-blue-50"
-                  }
-                `}
-              >
-                <FiLogIn />
-                Sign In
-              </Link>
+              {isPending ? (
+                <div className="h-12 w-full animate-pulse rounded-2xl bg-blue-100" />
+              ) : isLoggedIn ? (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={logoutLoading}
+                  className="
+                    flex w-full items-center justify-center gap-2 rounded-2xl
+                    bg-gradient-to-r from-red-500 to-rose-600 px-4 py-3.5
+                    text-sm font-extrabold text-white shadow-lg shadow-red-600/20
+                    transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-70
+                  "
+                >
+                  <FiLogOut />
+                  {logoutLoading ? "Logging out..." : "Logout"}
+                </button>
+              ) : (
+                <>
+                  <Link
+                    href="/signin"
+                    className={`
+                      flex w-full items-center justify-center gap-2 rounded-2xl
+                      px-4 py-3.5 text-sm font-extrabold transition-all duration-300
+                      ${
+                        isActive("/signin")
+                          ? "bg-[#041032] text-white shadow-lg shadow-blue-950/20"
+                          : "border border-blue-100 bg-white text-blue-700 hover:bg-blue-50"
+                      }
+                    `}
+                  >
+                    <FiLogIn />
+                    Sign In
+                  </Link>
 
-              <Link
-                href="/signup"
-                className={`
-                  flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm font-bold text-white transition-all duration-300
-                  ${
-                    isActive("/signup")
-                      ? "bg-blue-900"
-                      : "bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 shadow-lg shadow-blue-700/25"
-                  }
-                `}
-              >
-                <FiUserPlus />
-                Sign Up
-              </Link>
+                  <Link
+                    href="/signup"
+                    className={`
+                      flex w-full items-center justify-center gap-2 rounded-2xl
+                      px-4 py-3.5 text-sm font-extrabold text-white transition-all duration-300
+                      ${
+                        isActive("/signup")
+                          ? "bg-[#041032]"
+                          : "bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 shadow-lg shadow-blue-700/25"
+                      }
+                    `}
+                  >
+                    <FiUserPlus />
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -340,7 +446,7 @@ const Navbar = () => {
               </div>
 
               <div>
-                <p className="text-sm font-bold text-slate-900">
+                <p className="text-sm font-extrabold text-slate-900">
                   Read smarter
                 </p>
                 <p className="text-xs text-slate-500">

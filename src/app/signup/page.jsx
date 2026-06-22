@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 import {
   FiUser,
   FiMail,
@@ -20,6 +22,8 @@ import {
 } from "react-icons/fi";
 
 export default function RegisterPage() {
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     name: "",
     photo: "",
@@ -81,44 +85,30 @@ export default function RegisterPage() {
     try {
       setLoading(true);
 
-      const registerPayload = {
+      const { data, error } = await authClient.signUp.email({
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
-        photo: formData.photo.trim(),
         password: formData.password,
+        image: formData.photo.trim() || undefined,
+
+        // This requires `role` to be added in auth.js user.additionalFields
         role: formData.role,
-      };
 
-      /*
-        Future Better Auth manual signup logic:
+        // After successful signup
+        callbackURL: "/",
+      });
 
-        await authClient.signUp.email({
-          name: registerPayload.name,
-          email: registerPayload.email,
-          password: registerPayload.password,
-          image: registerPayload.photo,
-        });
+      if (error) {
+        setError(error.message || "Registration failed. Please try again.");
+        return;
+      }
 
-        Then save/update user role in database:
-        role: registerPayload.role
+      setSuccess("Account created successfully.");
 
-        Manual signup can create:
-        - user / reader
-        - librarian / provider
-
-        Google signup must always create user/reader only.
-      */
-
-      console.log("Manual register payload:", registerPayload);
-
-      setSuccess(
-        "Registration UI is ready. Better Auth connection will be added later."
-      );
-
-      // Later after successful registration:
-      // router.push("/");
+      router.push("/");
+      router.refresh();
     } catch (err) {
-      setError(err.message || "Registration failed. Please try again.");
+      setError(err?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -130,31 +120,20 @@ export default function RegisterPage() {
       setSuccess("");
       setGoogleLoading(true);
 
-      /*
-        Future Better Auth Google OAuth logic:
-
-        await authClient.signIn.social({
-          provider: "google",
-          callbackURL: "/",
-        });
-
-        IMPORTANT:
-        Google signup/login must always create/login as Reader/User only.
-        Google signup must NOT create Librarian account.
-      */
-
-      const googlePayload = {
+      const { data, error } = await authClient.signIn.social({
         provider: "google",
-        role: "user",
-      };
+        callbackURL: "/",
+        errorCallbackURL: "/signup",
+      });
 
-      console.log("Google signup payload:", googlePayload);
+      if (error) {
+        setError(error.message || "Google sign up failed. Please try again.");
+        return;
+      }
 
-      setSuccess(
-        "Google sign up will be connected later. Google accounts will be Reader/User only."
-      );
+      // Usually Better Auth redirects automatically for social login.
     } catch (err) {
-      setError(err.message || "Google sign up failed. Please try again.");
+      setError(err?.message || "Google sign up failed. Please try again.");
     } finally {
       setGoogleLoading(false);
     }
@@ -203,7 +182,7 @@ export default function RegisterPage() {
               <FeatureCard
                 icon={<FiShield />}
                 title="Secure Auth"
-                text="Better Auth and Google login will be connected later."
+                text="Better Auth email/password and Google login connected."
               />
             </div>
 
@@ -219,7 +198,7 @@ export default function RegisterPage() {
                   </h3>
                   <p className="mt-1 text-sm leading-6 text-slate-400">
                     Manual signup supports Reader and Librarian. Google signup
-                    is clearly marked as Reader/User only.
+                    creates Reader/User account only.
                   </p>
                 </div>
               </div>

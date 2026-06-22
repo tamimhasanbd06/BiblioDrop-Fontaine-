@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 import {
   FiAlertCircle,
   FiArrowRight,
@@ -18,11 +20,28 @@ import {
 } from "react-icons/fi";
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+
+  const redirectByRole = async () => {
+    const sessionResult = await authClient.getSession();
+    const role = sessionResult?.data?.user?.role || "user";
+
+    if (role === "admin") {
+      router.push("/dashboard/admin");
+    } else if (role === "librarian") {
+      router.push("/dashboard/librarian");
+    } else {
+      router.push("/");
+    }
+
+    router.refresh();
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -52,35 +71,22 @@ export default function LoginPage() {
     try {
       setLoading(true);
 
-      const loginPayload = {
+      const { data, error } = await authClient.signIn.email({
         email,
         password,
         rememberMe,
-      };
+      });
 
-      /*
-        Future Better Auth email/password login logic:
+      if (error) {
+        setError(error.message || "Login failed. Please try again.");
+        return;
+      }
 
-        await authClient.signIn.email({
-          email: loginPayload.email,
-          password: loginPayload.password,
-        });
+      setSuccess("Login successful.");
 
-        After login:
-        - Fetch user role from database/session.
-        - Reader/User can go Home.
-        - Librarian can go /dashboard/librarian.
-        - Admin can go /dashboard/admin.
-      */
-
-      console.log("Manual login payload:", loginPayload);
-
-      setSuccess("Login UI is ready. Better Auth connection will be added later.");
-
-      // Later after successful login:
-      // router.push("/");
+      await redirectByRole();
     } catch (err) {
-      setError(err.message || "Login failed. Please try again.");
+      setError(err?.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -92,33 +98,21 @@ export default function LoginPage() {
       setSuccess("");
       setGoogleLoading(true);
 
-      /*
-        Future Better Auth Google OAuth login logic:
-
-        await authClient.signIn.social({
-          provider: "google",
-          callbackURL: "/",
-        });
-
-        IMPORTANT:
-        Google login/signup must always create/login as Reader/User only.
-        Google login must NOT create Librarian account.
-
-        Librarian must login/register manually with email and password.
-      */
-
-      const googlePayload = {
+      const { data, error } = await authClient.signIn.social({
         provider: "google",
-        role: "user",
-      };
+        callbackURL: "/",
+        errorCallbackURL: "/signin",
+      });
 
-      console.log("Google login payload:", googlePayload);
+      if (error) {
+        setError(error.message || "Google login failed. Please try again.");
+        return;
+      }
 
-      setSuccess(
-        "Google login will be connected later. Google accounts will be Reader/User only."
-      );
+      // Usually Better Auth redirects automatically for social login.
+      // Google users will use the default role from auth.js: "user".
     } catch (err) {
-      setError(err.message || "Google login failed. Please try again.");
+      setError(err?.message || "Google login failed. Please try again.");
     } finally {
       setGoogleLoading(false);
     }
@@ -167,7 +161,7 @@ export default function LoginPage() {
               <FeatureCard
                 icon={<FiShield />}
                 title="Secure Login"
-                text="Better Auth and Google login will be connected later."
+                text="Better Auth email/password and Google login connected."
               />
             </div>
 
