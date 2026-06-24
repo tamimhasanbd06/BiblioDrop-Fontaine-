@@ -1,9 +1,10 @@
+// বাংলা মন্তব্য: Better Auth configuration একই MongoDB database ব্যবহার করছে।
 import { betterAuth } from "better-auth";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 
 const mongoUri = process.env.MONGODB_URI;
-const dbName = process.env.MONGODB_DB || "bibliodrop";
+const dbName = process.env.MONGODB_DB || "biblioteca";
 
 if (!mongoUri) {
   throw new Error("Missing MONGODB_URI in .env.local");
@@ -17,13 +18,6 @@ if (!process.env.BETTER_AUTH_SECRET) {
   throw new Error("Missing BETTER_AUTH_SECRET in .env.local");
 }
 
-if (!process.env.GOOGLE_CLIENT_ID) {
-  throw new Error("Missing GOOGLE_CLIENT_ID in .env.local");
-}
-
-if (!process.env.GOOGLE_CLIENT_SECRET) {
-  throw new Error("Missing GOOGLE_CLIENT_SECRET in .env.local");
-}
 
 const client = new MongoClient(mongoUri);
 const db = client.db(dbName);
@@ -43,11 +37,15 @@ export const auth = betterAuth({
   },
 
   socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      prompt: "select_account",
-    },
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? {
+          google: {
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            prompt: "select_account",
+          },
+        }
+      : {}),
   },
 
   user: {

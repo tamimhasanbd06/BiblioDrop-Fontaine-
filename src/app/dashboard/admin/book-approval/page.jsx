@@ -1,111 +1,18 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { CheckCircle, Trash2 } from "lucide-react";
+import { serverApi, formatDate, formatMoney } from "@/lib/api";
 
-const pendingBooks = [
-  {
-    id: 1,
-    title: "Sense and Sensibility",
-    author: "Jane Austen",
-    category: "Romance",
-    ownerName: "Clark Kent",
-    ownerEmail: "clark.k@example.com",
-    deliveryFee: 50,
-    approvalStatus: "Pending Approval",
-  },
-  {
-    id: 2,
-    title: "Deep Work",
-    author: "Cal Newport",
-    category: "Productivity",
-    ownerName: "Bruce Wayne",
-    ownerEmail: "bruce@example.com",
-    deliveryFee: 60,
-    approvalStatus: "Pending Approval",
-  },
-];
-
+// বাংলা মন্তব্য: Admin book approval queue page।
 export default function BookApprovalPage() {
-  return (
-    <div className="min-h-screen bg-[#041032] text-slate-100 p-6 md:p-10 transition-colors duration-300">
-      <section className="max-w-7xl mx-auto space-y-10">
-        
-        {/* Header Section */}
-        <div className="relative pb-2 border-b border-slate-800">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white">
-            Book Approval Queue
-          </h1>
-          <p className="text-slate-400 mt-2 text-sm sm:text-base">
-            Review pending books and approve them for public browsing.
-          </p>
-        </div>
-
-        {/* Glassmorphic Table Container */}
-        <div className="bg-[#0a1941]/60 backdrop-blur-md rounded-2xl border border-slate-800/80 shadow-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-[#0f2256] border-b border-slate-800 text-slate-300 text-sm font-semibold tracking-wider uppercase">
-                <tr>
-                  <th className="py-4 px-6">Book</th>
-                  <th className="py-4 px-6">Category</th>
-                  <th className="py-4 px-6">Librarian / Owner</th>
-                  <th className="py-4 px-6">Fee</th>
-                  <th className="py-4 px-6">Status</th>
-                  <th className="py-4 px-6 text-center">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-slate-800/60 text-slate-200">
-                {pendingBooks.map((book) => (
-                  <tr 
-                    key={book.id}
-                    className="hover:bg-slate-800/20 transition-colors duration-200"
-                  >
-                    {/* Title & Author Info */}
-                    <td className="py-4 px-6">
-                      <p className="font-semibold text-white">{book.title}</p>
-                      <p className="text-sm text-slate-400 mt-0.5">{book.author}</p>
-                    </td>
-
-                    <td className="py-4 px-6 text-slate-300">{book.category}</td>
-                    
-                    {/* Owner / Submitter Info */}
-                    <td className="py-4 px-6">
-                      <p className="font-medium text-slate-200">{book.ownerName}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">{book.ownerEmail}</p>
-                    </td>
-                    
-                    <td className="py-4 px-6 font-semibold text-slate-300">৳{book.deliveryFee}</td>
-
-                    {/* Pending Warning Status Badge */}
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                        {book.approvalStatus}
-                      </span>
-                    </td>
-
-                    {/* Row Item Actions */}
-                    <td className="py-4 px-6">
-                      <div className="flex items-center justify-center gap-2.5">
-                        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-all duration-200">
-                          <CheckCircle size={13} />
-                          Approve
-                        </button>
-
-                        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all duration-200">
-                          <Trash2 size={13} />
-                          Reject
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </section>
-    </div>
-  );
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const load = () => serverApi("/dashboard/admin/book-approval").then((d) => setBooks(d.books || [])).catch((e) => setError(e.message)).finally(() => setLoading(false));
+  useEffect(() => { load(); }, []);
+  const approve = async (id) => { try { await serverApi(`/books/${id}/approve`, { method: "PATCH" }); load(); } catch (e) { alert(e.message); } };
+  const remove = async (id) => { if (!confirm("Delete this pending book?")) return; try { await serverApi(`/dashboard/admin/books/${id}`, { method: "DELETE" }); load(); } catch (e) { alert(e.message); } };
+  return <AdminTable title="Book Approval Queue" subtitle="Approve pending books or delete invalid listings." error={error} loading={loading}>{books.map((book) => <tr key={book._id} className="border-t border-slate-800"><td className="px-4 py-4"><p className="font-bold text-white">{book.title}</p><p className="text-xs text-slate-400">{book.author}</p></td><td className="px-4 py-4 text-slate-300">{book.category}</td><td className="px-4 py-4 text-slate-300">{formatMoney(book.deliveryFee)}</td><td className="px-4 py-4 text-slate-300">{book.ownerEmail || book.librarianEmail}</td><td className="px-4 py-4 text-slate-300">{formatDate(book.createdAt)}</td><td className="px-4 py-4"><div className="flex gap-2"><button onClick={() => approve(book._id)} className="rounded-full bg-emerald-600 px-3 py-2 text-xs font-bold text-white"><CheckCircle size={14} /></button><button onClick={() => remove(book._id)} className="rounded-full bg-red-600 px-3 py-2 text-xs font-bold text-white"><Trash2 size={14} /></button></div></td></tr>)}{books.length === 0 && !loading && <tr><td colSpan="6" className="p-8 text-center text-slate-400">No pending books.</td></tr>}</AdminTable>;
 }
+function AdminTable({ title, subtitle, error, loading, children }) { return <section className="space-y-8"><div className="border-b border-slate-800 pb-2"><h1 className="text-4xl font-extrabold text-white">{title}</h1><p className="mt-2 text-slate-400">{subtitle}</p></div>{error && <div className="rounded-2xl bg-red-500/10 p-4 text-red-300">{error}</div>}{loading ? <div className="h-64 animate-pulse rounded-2xl bg-[#0a1941]/60" /> : <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-[#0a1941]/60"><table className="min-w-full text-sm"><thead className="bg-[#041032]"><tr>{["Book", "Category", "Fee", "Owner", "Date", "Actions"].map((h) => <th key={h} className="px-4 py-4 text-left font-bold text-slate-300">{h}</th>)}</tr></thead><tbody>{children}</tbody></table></div>}</section>; }

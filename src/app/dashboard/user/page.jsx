@@ -1,154 +1,40 @@
 "use client";
 
-import {
-  BookOpen,
-  Clock,
-  DollarSign,
-  PackageCheck,
-} from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { useEffect, useState } from "react";
+import { BookOpen, Clock, DollarSign, PackageCheck } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { serverApi, formatMoney } from "@/lib/api";
 
-const stats = [
-  {
-    title: "Total Books Read",
-    value: 12,
-    icon: BookOpen,
-    iconBg: "from-blue-500/20 to-indigo-500/20",
-    iconColor: "text-blue-400",
-  },
-  {
-    title: "Pending Deliveries",
-    value: 3,
-    icon: Clock,
-    iconBg: "from-amber-500/20 to-orange-500/20",
-    iconColor: "text-amber-400",
-  },
-  {
-    title: "Total Spent",
-    value: "$84",
-    icon: DollarSign,
-    iconBg: "from-emerald-500/20 to-teal-500/20",
-    iconColor: "text-emerald-400",
-  },
-  {
-    title: "Delivered Books",
-    value: 9,
-    icon: PackageCheck,
-    iconBg: "from-violet-500/20 to-purple-500/20",
-    iconColor: "text-violet-400",
-  },
-];
-
-const chartData = [
-  { month: "Jan", books: 2 },
-  { month: "Feb", books: 4 },
-  { month: "Mar", books: 3 },
-  { month: "Apr", books: 6 },
-  { month: "May", books: 5 },
-];
-
+// বাংলা মন্তব্য: User dashboard overview dynamic stats এবং chart দেখায়।
 export default function UserDashboardPage() {
-  return (
-    <div className="min-h-screen bg-[#041032] text-slate-100 p-6 md:p-10 transition-colors duration-300">
-      <section className="max-w-7xl mx-auto space-y-10">
-        
-        {/* Header Section */}
-        <div className="relative pb-2 border-b border-slate-800">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white bg-clip-text">
-            User Dashboard
-          </h1>
-          <p className="text-slate-400 mt-2 text-sm sm:text-base">
-            Track your books, deliveries, reading list, and reviews.
-          </p>
-        </div>
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat) => {
-            const Icon = stat.icon;
+  useEffect(() => {
+    // বাংলা মন্তব্য: Protected overview API থেকে user quick stats আনা হচ্ছে।
+    serverApi("/dashboard/user/overview").then((data) => setStats(data.stats)).catch((err) => setError(err.message)).finally(() => setLoading(false));
+  }, []);
 
-            return (
-              <div
-                key={stat.title}
-                className="group bg-[#0a1941]/60 backdrop-blur-md rounded-2xl p-6 border border-slate-800 hover:border-slate-700 shadow-xl transition-all duration-300 hover:-translate-y-1"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-slate-400 tracking-wide uppercase">
-                      {stat.title}
-                    </p>
-                    <h2 className="text-3xl font-bold text-white tracking-tight">
-                      {stat.value}
-                    </h2>
-                  </div>
+  const cards = [
+    { title: "Total Books Read", value: stats?.totalBooksRead || 0, icon: BookOpen, color: "text-blue-400" },
+    { title: "Pending Deliveries", value: stats?.pendingDeliveries || 0, icon: Clock, color: "text-amber-400" },
+    { title: "Total Fees Spent", value: formatMoney(stats?.totalSpent), icon: DollarSign, color: "text-emerald-400" },
+    { title: "Delivered Books", value: stats?.deliveredBooks || 0, icon: PackageCheck, color: "text-violet-400" },
+  ];
+  const chartData = stats?.chart?.length ? stats.chart : [{ name: "No Data", value: 0 }];
 
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.iconBg} flex items-center justify-center border border-slate-700/50 shadow-inner group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className={stat.iconColor} size={22} />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Chart Section */}
-        <div className="bg-[#0a1941]/60 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-slate-800 shadow-xl">
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-white">
-              Monthly Reading Progress
-            </h2>
-            <p className="text-xs text-slate-400 mt-1">Visual breakdown of your reading consistency</p>
-          </div>
-
-          <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorBooks" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#1d4ed8" stopOpacity={0.2}/>
-                  </linearGradient>
-                </defs>
-                <XAxis 
-                  dataKey="month" 
-                  stroke="#64748b" 
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis 
-                  stroke="#64748b" 
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#0f172a', 
-                    borderColor: '#334155',
-                    borderRadius: '12px',
-                    color: '#fff'
-                  }}
-                  cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
-                />
-                <Bar 
-                  dataKey="books" 
-                  fill="url(#colorBooks)" 
-                  radius={[6, 6, 0, 0]} 
-                  maxBarSize={50}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
+  return <DashboardShell title="User Dashboard" subtitle="Track your books, deliveries, reading list, and reviews." error={error}>{loading ? <LoadingGrid /> : <><div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">{cards.map((card) => <StatCard key={card.title} {...card} />)}</div><ChartBox title="Delivery Status Overview" data={chartData} /></>}</DashboardShell>;
 }
+
+// বাংলা মন্তব্য: Dashboard wrapper theme preserve করে।
+function DashboardShell({ title, subtitle, error, children }) { return <div className="min-h-screen bg-[#041032] text-slate-100"><section className="space-y-10"><div className="border-b border-slate-800 pb-2"><h1 className="text-4xl font-extrabold tracking-tight text-white">{title}</h1><p className="mt-2 text-sm text-slate-400 sm:text-base">{subtitle}</p></div>{error && <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-red-300">{error}</div>}{children}</section></div>; }
+
+// বাংলা মন্তব্য: Quick stat card component।
+function StatCard({ title, value, icon: Icon, color }) { return <div className="group rounded-2xl border border-slate-800 bg-[#0a1941]/60 p-6 shadow-xl backdrop-blur-md transition hover:-translate-y-1 hover:border-slate-700"><div className="flex items-center justify-between"><div><p className="text-sm font-medium uppercase tracking-wide text-slate-400">{title}</p><h2 className="mt-2 text-3xl font-bold text-white">{value}</h2></div><div className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-700/50 bg-blue-500/10"><Icon className={color} size={22} /></div></div></div>; }
+
+// বাংলা মন্তব্য: Recharts chart box।
+function ChartBox({ title, data }) { return <div className="rounded-2xl border border-slate-800 bg-[#0a1941]/60 p-6 shadow-xl backdrop-blur-md md:p-8"><h2 className="mb-6 text-xl font-bold text-white">{title}</h2><div className="h-80 w-full"><ResponsiveContainer width="100%" height="100%"><BarChart data={data}><XAxis dataKey="name" stroke="#64748b" /><YAxis stroke="#64748b" allowDecimals={false} /><Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: 12, color: "#fff" }} /><Bar dataKey="value" fill="#3b82f6" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer></div></div>; }
+
+// বাংলা মন্তব্য: Dashboard loading cards।
+function LoadingGrid() { return <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-32 animate-pulse rounded-2xl bg-[#0a1941]/60" />)}</div>; }

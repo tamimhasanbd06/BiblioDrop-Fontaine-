@@ -1,110 +1,17 @@
 "use client";
 
-import { EyeOff, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Trash2, UploadCloud } from "lucide-react";
+import { serverApi, formatMoney } from "@/lib/api";
 
-const books = [
-  {
-    id: 1,
-    title: "Sense and Sensibility",
-    author: "Jane Austen",
-    category: "Romance",
-    ownerName: "Clark Kent",
-    approvalStatus: "Approved",
-    availabilityStatus: "Available",
-  },
-  {
-    id: 2,
-    title: "Atomic Habits",
-    author: "James Clear",
-    category: "Self Help",
-    ownerName: "Bruce Wayne",
-    approvalStatus: "Approved",
-    availabilityStatus: "Available",
-  },
-];
-
-export default function ManageBooksPage() {
-  return (
-    <div className="min-h-screen bg-[#041032] text-slate-100 p-6 md:p-10 transition-colors duration-300">
-      <section className="max-w-7xl mx-auto space-y-10">
-        
-        {/* Header Section */}
-        <div className="relative pb-2 border-b border-slate-800">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white">
-            Manage All Books
-          </h1>
-          <p className="text-slate-400 mt-2 text-sm sm:text-base">
-            Admin can control every book on the platform.
-          </p>
-        </div>
-
-        {/* Glassmorphic Table Container */}
-        <div className="bg-[#0a1941]/60 backdrop-blur-md rounded-2xl border border-slate-800/80 shadow-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-[#0f2256] border-b border-slate-800 text-slate-300 text-sm font-semibold tracking-wider uppercase">
-                <tr>
-                  <th className="py-4 px-6">Book</th>
-                  <th className="py-4 px-6">Category</th>
-                  <th className="py-4 px-6">Owner</th>
-                  <th className="py-4 px-6">Approval</th>
-                  <th className="py-4 px-6">Availability</th>
-                  <th className="py-4 px-6 text-center">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-slate-800/60 text-slate-200">
-                {books.map((book) => (
-                  <tr 
-                    key={book.id}
-                    className="hover:bg-slate-800/20 transition-colors duration-200"
-                  >
-                    {/* Title & Author Info */}
-                    <td className="py-4 px-6">
-                      <p className="font-semibold text-white">{book.title}</p>
-                      <p className="text-sm text-slate-400 mt-0.5">{book.author}</p>
-                    </td>
-
-                    <td className="py-4 px-6 text-slate-300">{book.category}</td>
-                    
-                    <td className="py-4 px-6 text-slate-300">{book.ownerName}</td>
-
-                    {/* Approval Badge */}
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        {book.approvalStatus}
-                      </span>
-                    </td>
-
-                    {/* Availability Badge */}
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                        {book.availabilityStatus}
-                      </span>
-                    </td>
-
-                    {/* Row Action Items */}
-                    <td className="py-4 px-6">
-                      <div className="flex items-center justify-center gap-2.5">
-                        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500 hover:text-white transition-all duration-200">
-                          <EyeOff size={13} />
-                          Unpublish
-                        </button>
-
-                        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all duration-200">
-                          <Trash2 size={13} />
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </section>
-    </div>
-  );
+// বাংলা মন্তব্য: Admin manage all books page; force unpublish/delete।
+export default function AdminBooksPage() {
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const load = () => serverApi("/dashboard/admin/books").then((d) => setBooks(d.books || [])).catch((e) => setError(e.message)).finally(() => setLoading(false));
+  useEffect(() => { load(); }, []);
+  const unpublish = async (id) => { try { await serverApi(`/dashboard/admin/books/${id}/unpublish`, { method: "PATCH" }); load(); } catch (e) { alert(e.message); } };
+  const remove = async (id) => { if (!confirm("Delete this book?")) return; try { await serverApi(`/dashboard/admin/books/${id}`, { method: "DELETE" }); load(); } catch (e) { alert(e.message); } };
+  return <section className="space-y-8"><div className="border-b border-slate-800 pb-2"><h1 className="text-4xl font-extrabold text-white">Manage All Books</h1><p className="mt-2 text-slate-400">Admin can forcibly unpublish or delete any listing.</p></div>{error && <div className="rounded-2xl bg-red-500/10 p-4 text-red-300">{error}</div>}{loading ? <div className="h-64 animate-pulse rounded-2xl bg-[#0a1941]/60" /> : <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-[#0a1941]/60"><table className="min-w-full text-sm"><thead className="bg-[#041032]"><tr>{["Book", "Category", "Fee", "Approval", "Owner", "Actions"].map((h) => <th key={h} className="px-4 py-4 text-left font-bold text-slate-300">{h}</th>)}</tr></thead><tbody>{books.map((book) => <tr key={book._id} className="border-t border-slate-800"><td className="px-4 py-4"><p className="font-bold text-white">{book.title}</p><p className="text-xs text-slate-400">{book.author}</p></td><td className="px-4 py-4 text-slate-300">{book.category}</td><td className="px-4 py-4 text-slate-300">{formatMoney(book.deliveryFee)}</td><td className="px-4 py-4 text-slate-300">{book.approvalStatus}</td><td className="px-4 py-4 text-slate-300">{book.ownerEmail || book.librarianEmail}</td><td className="px-4 py-4"><div className="flex gap-2"><button onClick={() => unpublish(book._id)} className="rounded-full bg-yellow-500 px-3 py-2 text-xs font-bold text-slate-950"><UploadCloud size={14} /></button><button onClick={() => remove(book._id)} className="rounded-full bg-red-600 px-3 py-2 text-xs font-bold text-white"><Trash2 size={14} /></button></div></td></tr>)}</tbody></table>{books.length === 0 && <p className="p-8 text-center text-slate-400">No books found.</p>}</div>}</section>;
 }

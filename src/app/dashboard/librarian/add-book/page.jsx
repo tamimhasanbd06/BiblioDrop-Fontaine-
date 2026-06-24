@@ -1,158 +1,59 @@
 "use client";
 
 import { useState } from "react";
-import { UploadCloud } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { BookOpen, ImagePlus, Save } from "lucide-react";
+import { serverApi } from "@/lib/api";
 
+const categories = ["Fiction", "Academic", "Sci-Fi", "Romance", "Classics", "Children", "History", "Others"];
+
+// বাংলা মন্তব্য: Librarian নতুন বই add করতে পারে; backend status Pending Approval set করে।
 export default function AddBookPage() {
+  const router = useRouter();
+  const [form, setForm] = useState({ title: "", author: "", category: "Fiction", publisher: "", language: "English", isbn: "", pages: "", image: "", description: "", deliveryFee: "" });
+  const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const handleAddBook = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  // বাংলা মন্তব্য: Form input state update করা হচ্ছে।
+  const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
-    const form = e.target;
-
-    const bookData = {
-      title: form.title.value,
-      author: form.author.value,
-      category: form.category.value,
-      publisher: form.publisher.value,
-      language: form.language.value,
-      isbn: form.isbn.value,
-      pages: Number(form.pages.value),
-      image: form.image.value,
-      description: form.description.value,
-      deliveryFee: Number(form.deliveryFee.value),
-
-      availabilityStatus: "Available",
-      approvalStatus: "Pending Approval",
-
-      rating: 0,
-      totalReviews: 0,
-      totalDeliveries: 0,
-
-      ownerName: form.ownerName.value,
-      ownerEmail: form.ownerEmail.value,
-      ownerPhoto: form.ownerPhoto.value,
-
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    console.log(bookData);
-
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    setLoading(false);
-    form.reset();
+  // বাংলা মন্তব্য: ImgBB image upload করে URL form.image-এ রাখা হচ্ছে।
+  const handleImageUpload = async (file) => {
+    try {
+      if (!file) return;
+      const apiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+      if (!apiKey) throw new Error("Missing NEXT_PUBLIC_IMGBB_API_KEY. You can paste image URL manually.");
+      setUploading(true);
+      const fd = new FormData();
+      fd.append("image", file);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error("Image upload failed.");
+      update("image", data.data.url);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
-  // Shared responsive input class for premium dark themes
-  const inputStyle = "w-full bg-[#0f2256]/60 border border-slate-800 text-slate-100 placeholder-slate-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500/80 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200";
+  // বাংলা মন্তব্য: Add book protected API call করা হচ্ছে।
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      setMessage("");
+      await serverApi("/books", { method: "POST", body: JSON.stringify(form) });
+      alert("Book added. Waiting for admin approval.");
+      router.push("/dashboard/librarian/inventory");
+    } catch (err) {
+      setMessage(err.message || "Failed to add book.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  return (
-    <div className="min-h-screen bg-[#041032] text-slate-100 p-6 md:p-10 transition-colors duration-300">
-      <section className="max-w-4xl mx-auto space-y-10">
-        
-        {/* Header Section */}
-        <div className="relative pb-2 border-b border-slate-800">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white">
-            Add Book
-          </h1>
-          <p className="text-slate-400 mt-2 text-sm sm:text-base">
-            Add a new book. It will stay pending until admin approval.
-          </p>
-        </div>
-
-        {/* Glassmorphic Form Wrapper */}
-        <form
-          onSubmit={handleAddBook}
-          className="bg-[#0a1941]/60 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-slate-800/80 shadow-2xl grid grid-cols-1 md:grid-cols-2 gap-6"
-        >
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase ml-1">Book Title</label>
-            <input name="title" placeholder="e.g. Atomic Habits" required className={inputStyle} />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase ml-1">Author</label>
-            <input name="author" placeholder="e.g. James Clear" required className={inputStyle} />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase ml-1">Category</label>
-            <input name="category" placeholder="e.g. Self-Help" required className={inputStyle} />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase ml-1">Publisher</label>
-            <input name="publisher" placeholder="e.g. Penguin Books" required className={inputStyle} />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase ml-1">Language</label>
-            <input name="language" placeholder="e.g. English" required className={inputStyle} />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase ml-1">ISBN</label>
-            <input name="isbn" placeholder="e.g. 9780735211292" required className={inputStyle} />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase ml-1">Pages</label>
-            <input name="pages" type="number" placeholder="320" required className={inputStyle} />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase ml-1">Delivery Fee ($)</label>
-            <input name="deliveryFee" type="number" placeholder="5" required className={inputStyle} />
-          </div>
-
-          <div className="space-y-1 md:col-span-2">
-            <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase ml-1">Book Image URL</label>
-            <input name="image" placeholder="https://images.unsplash.com/..." required className={inputStyle} />
-          </div>
-
-          <div className="space-y-1 md:col-span-2">
-            <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase ml-1">Description</label>
-            <textarea
-              name="description"
-              placeholder="Provide a brief summary or notes about the book's condition..."
-              required
-              rows="4"
-              className={`${inputStyle} resize-none`}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase ml-1">Owner Name</label>
-            <input name="ownerName" placeholder="Your Name" required className={inputStyle} />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase ml-1">Owner Email</label>
-            <input name="ownerEmail" type="email" placeholder="you@example.com" required className={inputStyle} />
-          </div>
-
-          <div className="space-y-1 md:col-span-2">
-            <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase ml-1">Owner Photo URL</label>
-            <input name="ownerPhoto" placeholder="https://images.unsplash.com/avatar..." className={inputStyle} />
-          </div>
-
-          {/* Action Submission Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="md:col-span-2 mt-4 inline-flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-xl text-sm font-semibold tracking-wide text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed border border-blue-500/20 hover:border-blue-400/30 transition-all duration-200 shadow-lg shadow-blue-950/40"
-          >
-            <UploadCloud size={18} className={loading ? "animate-bounce" : ""} />
-            {loading ? "Submitting Request..." : "Submit Book for Approval"}
-          </button>
-        </form>
-
-      </section>
-    </div>
-  );
+  return <section className="space-y-8"><div className="border-b border-slate-800 pb-2"><h1 className="text-4xl font-extrabold text-white">Add Book</h1><p className="mt-2 text-slate-400">New books are saved as Pending Approval and need admin approval.</p></div>{message && <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-red-300">{message}</div>}<form onSubmit={handleSubmit} className="rounded-2xl border border-slate-800 bg-[#0a1941]/60 p-6 shadow-xl"><div className="grid gap-5 md:grid-cols-2"><Input label="Title" value={form.title} onChange={(v) => update("title", v)} required /><Input label="Author" value={form.author} onChange={(v) => update("author", v)} required /><label><span className="mb-2 block text-sm font-bold text-slate-300">Category</span><select value={form.category} onChange={(e) => update("category", e.target.value)} className="h-12 w-full rounded-2xl border border-slate-700 bg-[#041032] px-4 text-white outline-none">{categories.map((c) => <option key={c}>{c}</option>)}</select></label><Input label="Delivery Fee" type="number" value={form.deliveryFee} onChange={(v) => update("deliveryFee", v)} required /><Input label="Publisher" value={form.publisher} onChange={(v) => update("publisher", v)} /><Input label="Language" value={form.language} onChange={(v) => update("language", v)} /><Input label="ISBN" value={form.isbn} onChange={(v) => update("isbn", v)} /><Input label="Pages" type="number" value={form.pages} onChange={(v) => update("pages", v)} /></div><div className="mt-5 grid gap-5 md:grid-cols-[1fr_auto]"><Input label="Book Cover URL" value={form.image} onChange={(v) => update("image", v)} required /><label className="flex cursor-pointer items-end"><span className="inline-flex h-12 items-center gap-2 rounded-2xl bg-blue-600 px-5 text-sm font-bold text-white"><ImagePlus size={18} /> {uploading ? "Uploading..." : "Upload"}<input type="file" accept="image/*" hidden onChange={(e) => handleImageUpload(e.target.files?.[0])} /></span></label></div><label className="mt-5 block"><span className="mb-2 block text-sm font-bold text-slate-300">Description</span><textarea required value={form.description} onChange={(e) => update("description", e.target.value)} rows={5} className="w-full rounded-2xl border border-slate-700 bg-[#041032] p-4 text-white outline-none" /></label><button disabled={loading} className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-700 px-7 py-4 text-sm font-black text-white disabled:opacity-60"><Save size={18} /> {loading ? "Saving..." : "Save Book"}</button></form></section>;
 }
+function Input({ label, value, onChange, type = "text", required }) { return <label><span className="mb-2 block text-sm font-bold text-slate-300">{label}</span><input required={required} type={type} value={value} onChange={(e) => onChange(e.target.value)} className="h-12 w-full rounded-2xl border border-slate-700 bg-[#041032] px-4 text-white outline-none focus:border-blue-500" /></label>; }

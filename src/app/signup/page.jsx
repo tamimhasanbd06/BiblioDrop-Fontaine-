@@ -95,7 +95,7 @@ export default function RegisterPage() {
         role: formData.role,
 
         // After successful signup
-        callbackURL: "/",
+        callbackURL: "/auth/sync?next=/",
       });
 
       if (error) {
@@ -104,6 +104,9 @@ export default function RegisterPage() {
       }
 
       setSuccess("Account created successfully.");
+
+      // বাংলা মন্তব্য: Signup successful হলে JWT cookie তৈরি করা হচ্ছে।
+      await fetch("/api/jwt", { method: "POST", credentials: "include" });
 
       router.push("/");
       router.refresh();
@@ -122,7 +125,7 @@ export default function RegisterPage() {
 
       const { data, error } = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/",
+        callbackURL: "/auth/sync?next=/",
         errorCallbackURL: "/signup",
       });
 

@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# BiblioDrop Frontend
 
-## Getting Started
+BiblioDrop is an Online Book Delivery Management System built with Next.js, Better Auth, Tailwind CSS, Framer Motion, Recharts, Stripe flow, and ImgBB upload support.
 
-First, run the development server:
+## Updated Features
+- Dynamic navbar with role-based dashboard links.
+- Home page with hero, featured books, top librarians, and category links.
+- Browse Books page with search, category, availability, fee filters, sort, skeleton loading, empty state, and server-side pagination.
+- Book Details page with dynamic book information, Stripe request delivery, owner controls, and reviews.
+- Verified review page.
+- User dashboard overview, delivery history, reading list, and review management.
+- Librarian dashboard overview, add book with ImgBB, inventory, and delivery status management.
+- Admin dashboard overview, approval queue, manage users, manage books, and transactions.
+- Global loading and error pages.
+- Protected API calls through `/api/server` so JWT cookie is forwarded safely.
+- Bangla comments added in updated files.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Required Environment Variables
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+BACKEND_URL=http://localhost:8000
+MONGODB_URI=your_mongodb_atlas_uri
+MONGODB_DB=biblioteca
+BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+BETTER_AUTH_SECRET=your_better_auth_secret
+JWT_SECRET=your_jwt_secret
+JWT_COOKIE_NAME=bd_token
+NEXT_PUBLIC_IMGBB_API_KEY=your_imgbb_key
+GOOGLE_CLIENT_ID=your_google_client_id_optional
+GOOGLE_CLIENT_SECRET=your_google_client_secret_optional
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Scripts
+```bash
+npm install
+npm run dev
+npm run build
+npm start
+```

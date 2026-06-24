@@ -44,7 +44,6 @@ const Navbar = () => {
       { name: "Browse Books", path: "/books", icon: <FiBookOpen /> },
       {name: "About us", path: "/about", icon: <FiGrid />, private: true, },
       {name: "Contact", path: "/contact", icon: <FiGrid />, private: true, },
-      {name: "FAQ", path: "/faq", icon: <FiGrid />, private: true, },
       {name: "Dashboard", path: dashboardPath, icon: <FiGrid />, private: true, },
     ],
     [dashboardPath]
@@ -64,7 +63,9 @@ const Navbar = () => {
     try {
       setLogoutLoading(true);
 
+      // বাংলা মন্তব্য: Better Auth session এবং backend JWT cookie দুটোই clear করা হচ্ছে।
       await authClient.signOut();
+      await fetch("/api/jwt", { method: "DELETE", credentials: "include" });
 
       setIsOpen(false);
       router.push("/signin");

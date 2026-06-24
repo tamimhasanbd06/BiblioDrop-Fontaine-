@@ -1,107 +1,16 @@
 "use client";
 
-const deliveries = [
-  {
-    id: 1,
-    clientName: "Bruce Wayne",
-    bookTitle: "Sense and Sensibility",
-    date: "2026-06-15",
-    status: "Pending",
-  },
-  {
-    id: 2,
-    clientName: "Diana Prince",
-    bookTitle: "Atomic Habits",
-    date: "2026-06-16",
-    status: "Dispatched",
-  },
-  {
-    id: 3,
-    clientName: "Barry Allen",
-    bookTitle: "Deep Work",
-    date: "2026-06-18",
-    status: "Delivered",
-  },
-];
+import { useEffect, useState } from "react";
+import { Truck } from "lucide-react";
+import { serverApi, formatDate, formatMoney } from "@/lib/api";
 
-export default function ManageDeliveriesPage() {
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Pending":
-        return "bg-amber-500/10 text-amber-400 border border-amber-500/20";
-      case "Dispatched":
-        return "bg-blue-500/10 text-blue-400 border border-blue-500/20";
-      case "Delivered":
-        return "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
-      default:
-        return "bg-slate-500/10 text-slate-400 border border-slate-500/20";
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-[#041032] text-slate-100 p-6 md:p-10 transition-colors duration-300">
-      <section className="max-w-7xl mx-auto space-y-10">
-        
-        {/* Header Section */}
-        <div className="relative pb-2 border-b border-slate-800">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white">
-            Manage Deliveries
-          </h1>
-          <p className="text-slate-400 mt-2 text-sm sm:text-base">
-            Update delivery status from pending to delivered.
-          </p>
-        </div>
-
-        {/* Glassmorphic Table Container */}
-        <div className="bg-[#0a1941]/60 backdrop-blur-md rounded-2xl border border-slate-800/80 shadow-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-[#0f2256] border-b border-slate-800 text-slate-300 text-sm font-semibold tracking-wider uppercase">
-                <tr>
-                  <th className="py-4 px-6">Client Name</th>
-                  <th className="py-4 px-6">Book Title</th>
-                  <th className="py-4 px-6">Date</th>
-                  <th className="py-4 px-6">Current Status</th>
-                  <th className="py-4 px-6">Update Status</th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-slate-800/60 text-slate-200">
-                {deliveries.map((item) => (
-                  <tr 
-                    key={item.id}
-                    className="hover:bg-slate-800/20 transition-colors duration-200"
-                  >
-                    <td className="py-4 px-6 font-semibold text-white">{item.clientName}</td>
-                    <td className="py-4 px-6 text-slate-300 max-w-xs truncate">{item.bookTitle}</td>
-                    <td className="py-4 px-6 text-slate-400 text-sm">{item.date}</td>
-
-                    {/* Current Status Badge Row */}
-                    <td className="py-4 px-6">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(item.status)}`}>
-                        {item.status}
-                      </span>
-                    </td>
-
-                    {/* Styled Interactive Selection Dropdown */}
-                    <td className="py-4 px-6">
-                      <select
-                        defaultValue={item.status}
-                        className="bg-[#0f2256]/80 border border-slate-700 text-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer"
-                      >
-                        <option value="Pending" className="bg-[#0f172a] text-slate-200">Pending</option>
-                        <option value="Dispatched" className="bg-[#0f172a] text-slate-200">Dispatched</option>
-                        <option value="Delivered" className="bg-[#0f172a] text-slate-200">Delivered</option>
-                      </select>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </section>
-    </div>
-  );
+// বাংলা মন্তব্য: Librarian delivery management page; status update protected API ব্যবহার করে।
+export default function LibrarianDeliveriesPage() {
+  const [deliveries, setDeliveries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const load = () => serverApi("/dashboard/librarian/deliveries").then((d) => setDeliveries(d.deliveries || [])).catch((e) => setError(e.message)).finally(() => setLoading(false));
+  useEffect(() => { load(); }, []);
+  const updateStatus = async (id, status) => { try { await serverApi(`/dashboard/librarian/deliveries/${id}`, { method: "PATCH", body: JSON.stringify({ status }) }); load(); } catch (e) { alert(e.message); } };
+  return <section className="space-y-8"><div className="border-b border-slate-800 pb-2"><h1 className="text-4xl font-extrabold text-white">Manage Deliveries</h1><p className="mt-2 text-slate-400">Update delivery requests from Pending to Dispatched to Delivered.</p></div>{error && <div className="rounded-2xl bg-red-500/10 p-4 text-red-300">{error}</div>}{loading ? <div className="h-64 animate-pulse rounded-2xl bg-[#0a1941]/60" /> : <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-[#0a1941]/60"><table className="min-w-full text-sm"><thead className="bg-[#041032]"><tr>{["Client", "Book", "Fee", "Date", "Status", "Update"].map((h) => <th key={h} className="px-4 py-4 text-left font-bold text-slate-300">{h}</th>)}</tr></thead><tbody>{deliveries.map((item) => <tr key={item._id} className="border-t border-slate-800"><td className="px-4 py-4 text-white">{item.userName || item.userEmail}</td><td className="px-4 py-4 text-slate-300">{item.bookTitle}</td><td className="px-4 py-4 text-slate-300">{formatMoney(item.deliveryFee)}</td><td className="px-4 py-4 text-slate-300">{formatDate(item.createdAt)}</td><td className="px-4 py-4"><span className="rounded-full bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-300">{item.status}</span></td><td className="px-4 py-4"><select value={item.status} onChange={(e) => updateStatus(item._id, e.target.value)} className="rounded-xl border border-slate-700 bg-[#041032] px-3 py-2 text-white"><option>Pending</option><option>Dispatched</option><option>Delivered</option></select></td></tr>)}</tbody></table>{deliveries.length === 0 && <div className="p-10 text-center text-slate-400"><Truck className="mx-auto mb-3" />No deliveries found.</div>}</div>}</section>;
 }

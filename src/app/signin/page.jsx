@@ -84,6 +84,9 @@ export default function LoginPage() {
 
       setSuccess("Login successful.");
 
+      // বাংলা মন্তব্য: Better Auth login সফল হলে backend protected API-এর জন্য JWT cookie তৈরি করা হচ্ছে।
+      await fetch("/api/jwt", { method: "POST", credentials: "include" });
+
       await redirectByRole();
     } catch (err) {
       setError(err?.message || "Login failed. Please try again.");
@@ -100,7 +103,7 @@ export default function LoginPage() {
 
       const { data, error } = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/",
+        callbackURL: "/auth/sync?next=/",
         errorCallbackURL: "/signin",
       });
 

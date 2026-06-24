@@ -1,19 +1,17 @@
+// বাংলা মন্তব্য: Next.js proxy route protected backend API call-এ JWT cookie forward করে।
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
 
-const backendURL = process.env.BACKEND_URL;
+const backendURL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const cookieName = process.env.JWT_COOKIE_NAME || "bd_token";
 
 async function handler(request, context) {
   try {
     if (!backendURL) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Missing BACKEND_URL in .env.local",
-        },
+        { success: false, message: "Missing backend URL in .env.local" },
         { status: 500 }
       );
     }

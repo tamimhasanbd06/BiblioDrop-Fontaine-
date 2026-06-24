@@ -1,93 +1,17 @@
 "use client";
 
-import { Pencil, Trash2, Star } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Edit, Trash2 } from "lucide-react";
+import { serverApi, formatDate } from "@/lib/api";
 
-const reviews = [
-  {
-    id: 1,
-    book: "Atomic Habits",
-    rating: 5,
-    comment: "Excellent book. Very practical and easy to follow.",
-    date: "2025-06-12",
-  },
-  {
-    id: 2,
-    book: "Deep Work",
-    rating: 4,
-    comment: "Helpful for improving focus and productivity.",
-    date: "2025-06-08",
-  },
-];
-
+// বাংলা মন্তব্য: User নিজের reviews edit/delete করতে পারে।
 export default function MyReviewsPage() {
-  return (
-    <div className="min-h-screen bg-[#041032] text-slate-100 p-6 md:p-10 transition-colors duration-300">
-      <section className="max-w-7xl mx-auto space-y-10">
-        
-        {/* Header Section */}
-        <div className="relative pb-2 border-b border-slate-800">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white">
-            My Reviews
-          </h1>
-          <p className="text-slate-400 mt-2 text-sm sm:text-base">
-            Manage your ratings and comments.
-          </p>
-        </div>
-
-        {/* Reviews Stack */}
-        <div className="space-y-4">
-          {reviews.map((review) => (
-            <div
-              key={review.id}
-              className="group bg-[#0a1941]/60 backdrop-blur-md border border-slate-800/80 hover:border-slate-700/80 rounded-2xl p-6 shadow-xl transition-all duration-300"
-            >
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-                <div className="space-y-3 flex-1">
-                  <h2 className="text-xl font-bold text-white group-hover:text-blue-400 transition-colors duration-200">
-                    {review.book}
-                  </h2>
-
-                  {/* Stars Container */}
-                  <div className="flex items-center gap-1">
-                    {[...Array(5)].map((_, index) => (
-                      <Star
-                        key={index}
-                        size={18}
-                        className={`${
-                          index < review.rating
-                            ? "fill-amber-400 text-amber-400"
-                            : "text-slate-600"
-                        }`}
-                      />
-                    ))}
-                  </div>
-
-                  <p className="text-slate-300 leading-relaxed max-w-3xl">
-                    {review.comment}
-                  </p>
-                  <p className="text-xs font-medium text-slate-500 tracking-wider">
-                    {review.date}
-                  </p>
-                </div>
-
-                {/* Actions Wrapper */}
-                <div className="flex items-center gap-3 sm:self-start">
-                  <button className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 hover:text-white transition-all duration-200 shadow-md">
-                    <Pencil size={14} />
-                    Edit
-                  </button>
-
-                  <button className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all duration-200 shadow-md">
-                    <Trash2 size={14} />
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-      </section>
-    </div>
-  );
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const load = () => serverApi("/dashboard/user/reviews").then((d) => setReviews(d.reviews || [])).catch((e) => setError(e.message)).finally(() => setLoading(false));
+  useEffect(() => { load(); }, []);
+  const edit = async (review) => { const rating = Number(prompt("Rating 1-5", review.rating)); const comment = prompt("Comment", review.comment); if (!rating || !comment) return; try { await serverApi(`/reviews/${review._id}`, { method: "PATCH", body: JSON.stringify({ rating, comment }) }); load(); } catch (e) { alert(e.message); } };
+  const remove = async (id) => { if (!confirm("Delete this review?")) return; try { await serverApi(`/reviews/${id}`, { method: "DELETE" }); load(); } catch (e) { alert(e.message); } };
+  return <section className="space-y-8"><div className="border-b border-slate-800 pb-2"><h1 className="text-4xl font-extrabold text-white">My Reviews</h1><p className="mt-2 text-slate-400">Edit or delete your verified reviews.</p></div>{error && <div className="rounded-2xl bg-red-500/10 p-4 text-red-300">{error}</div>}{loading ? <div className="h-64 animate-pulse rounded-2xl bg-[#0a1941]/60" /> : reviews.length === 0 ? <p className="rounded-2xl bg-[#0a1941]/60 p-8 text-center text-slate-400">No reviews found.</p> : <div className="grid gap-4 md:grid-cols-2">{reviews.map((review) => <article key={review._id} className="rounded-2xl border border-slate-800 bg-[#0a1941]/60 p-5"><div className="mb-3 flex items-center justify-between"><h3 className="font-bold text-white">{review.bookTitle}</h3><span className="text-yellow-300">★ {review.rating}</span></div><p className="text-sm leading-7 text-slate-400">{review.comment}</p><p className="mt-3 text-xs text-slate-500">{formatDate(review.createdAt)}</p><div className="mt-4 flex gap-2"><button onClick={() => edit(review)} className="rounded-full bg-blue-600 px-3 py-2 text-xs font-bold text-white"><Edit size={14} /></button><button onClick={() => remove(review._id)} className="rounded-full bg-red-600 px-3 py-2 text-xs font-bold text-white"><Trash2 size={14} /></button></div></article>)}</div>}</section>;
 }
