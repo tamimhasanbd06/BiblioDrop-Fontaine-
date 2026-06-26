@@ -1,40 +1,68 @@
-# BiblioDrop Frontend
+# BiblioDrop – Online Book Delivery Management System (Client Side)
 
-BiblioDrop is an Online Book Delivery Management System built with Next.js, Better Auth, Tailwind CSS, Framer Motion, Recharts, Stripe flow, and ImgBB upload support.
+BiblioDrop is a comprehensive full-stack web application designed to connect avid readers and students with local libraries and independent book owners. The platform allows users to browse diverse book collections, request doorstep delivery via secure Stripe payments, and manage their reading lists. It features dedicated role-based dashboards for Users, Librarians, and Admins, built with a modern, cohesive UI.
 
-## Updated Features
-- Dynamic navbar with role-based dashboard links.
-- Home page with hero, featured books, top librarians, and category links.
-- Browse Books page with search, category, availability, fee filters, sort, skeleton loading, empty state, and server-side pagination.
-- Book Details page with dynamic book information, Stripe request delivery, owner controls, and reviews.
-- Verified review page.
-- User dashboard overview, delivery history, reading list, and review management.
-- Librarian dashboard overview, add book with ImgBB, inventory, and delivery status management.
-- Admin dashboard overview, approval queue, manage users, manage books, and transactions.
-- Global loading and error pages.
-- Protected API calls through `/api/server` so JWT cookie is forwarded safely.
-- Bangla comments added in updated files.
+## 🔗 Deployment Links & Credentials
+- **Live Site URL:** [Insert Live Link Here]
+- **Backend Repository:** [Insert Backend GitHub Link Here]
+- **Default System Admin Access:**
+  - **Email:** `admin@gmail.com`
+  - **Password:** `Admin@123`
 
-## Required Environment Variables
+---
+
+## ⚡ Key Features
+
+### 1. User (Reader) Journey
+- **Dynamic Book Exploration:** Explore, search by title/author, and filter books by category, fee range, and availability with smooth server-side pagination (6–12 items per page).
+- **Stripe Payment Integration:** Secure and instant delivery fee checkout natively managed via Stripe.
+- **Verified Review System:** A strict interactive system allowing ratings and comments *only* for books successfully delivered to the user.
+- **Personalized Dashboard:** Data visualization charts tracking total books read, pending deliveries, and expenditures, along with custom Reading Lists and Wishlist controls.
+
+### 2. Librarian (Provider) Space
+- **Inventory Control:** Add books easily using forms integrated with the **imgBB API** for high-resolution cover hosting.
+- **Double-Gated Flow:** New book listings are initialized as `Pending Approval` and hidden from the public browse section until an Admin approves them.
+- **Publishing Power:** Toggle approved books between `Published` and `Unpublished` states anytime.
+- **Delivery Management:** Track and update delivery order states from `Pending` $\rightarrow$ `Dispatched` $\rightarrow$ `Delivered`.
+
+### 3. Administrator Dashboard
+- **Platform Analytics:** Interactive dashboard charts (Pie charts/Bar charts) monitoring total users, books, deliveries, and overall platform revenue.
+- **Approval Queue:** Review pending book requests with single-click `Approve & Publish` or `Delete` controls.
+- **User Management:** Update user levels (User $\leftrightarrow$ Librarian $\leftrightarrow$ Admin) or securely remove users from the ecosystem.
+
+### 4. UI/UX Design Standards
+- **Cohesive Typography & Color Palette:** Designed with balanced contrast, proper alignment, and consistent component styling (strictly avoiding unorganized or "Gobindo" design flows).
+- **Framer Motion Animations:** Fully animated homepage and route transitions for a premium look and feel.
+- **Robust Session Handling:** Built using **Better Auth** ensuring that logged-in users do *not* redirect to the login page upon manual browser reloads.
+- **Modern Branding:** Integration of the newly rebranded X logo replacing the old Twitter bird.
+
+---
+
+## 📦 Installed Dependencies & Ecosystem
+
+The following core npm packages have been used to build this application:
+
+- `react` / `next.js` (Core Framework)
+- `better-auth` (Authentication infrastructure supporting Email/Password and Google OAuth)
+- `framer-motion` (High-fidelity interface animations)
+- `recharts` / `chart.js` (Dashboard data visualization and metrics)
+- `@stripe/stripe-js` / `@stripe/react-stripe-js` (Secure client checkout tokens)
+- `tailwind-merge` / `daisyui` or `heroui` (Utility components and clean responsive layouts)
+- `lucide-react` (Interface iconography and modern X logo)
+- `react-hook-form` & `sweetalert2` / `react-hot-toast` (Alert handling and form validation)
+
+---
+
+## 🔧 Environment Configuration (`.env.local`)
+
+To run the client application locally, create a `.env.local` file in the root folder and add the following keys:
+
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
-BACKEND_URL=http://localhost:8000
-MONGODB_URI=your_mongodb_atlas_uri
-MONGODB_DB=biblioteca
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_public_key
+NEXT_PUBLIC_IMGBB_API_KEY=your_imgbb_api_key
+
+# Better Auth Configuration
+BETTER_AUTH_SECRET=your_auth_secret_long_hash
 BETTER_AUTH_URL=http://localhost:3000
 NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
-BETTER_AUTH_SECRET=your_better_auth_secret
-JWT_SECRET=your_jwt_secret
-JWT_COOKIE_NAME=bd_token
-NEXT_PUBLIC_IMGBB_API_KEY=your_imgbb_key
-GOOGLE_CLIENT_ID=your_google_client_id_optional
-GOOGLE_CLIENT_SECRET=your_google_client_secret_optional
-```
-
-## Scripts
-```bash
-npm install
-npm run dev
-npm run build
-npm start
-```

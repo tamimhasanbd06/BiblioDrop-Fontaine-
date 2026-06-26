@@ -1,6 +1,7 @@
 // বাংলা মন্তব্য: External image domains allow করা হচ্ছে যাতে book cover/avatar show করে।
 const nextConfig = {
   images: {
+    unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "covers.openlibrary.org", pathname: "/**" },
       { protocol: "https", hostname: "images.unsplash.com", pathname: "/**" },

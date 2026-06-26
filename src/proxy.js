@@ -1,20 +1,13 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 
 export async function proxy(request) {
-  const session = await auth.api.getSession({
-    headers: request.headers,
-  });
+  const cookieName = process.env.JWT_COOKIE_NAME || "bd_token";
+  const token = request.cookies.get(cookieName)?.value;
 
-  if (!session?.user) {
+
+  if (!token) {
     const signInUrl = new URL("/signin", request.url);
-
-    // After login, you can use this callbackUrl to return user back
-    signInUrl.searchParams.set(
-      "callbackUrl",
-      request.nextUrl.pathname + request.nextUrl.search
-    );
-
+    signInUrl.searchParams.set("callbackUrl", request.nextUrl.pathname + request.nextUrl.search);
     return NextResponse.redirect(signInUrl);
   }
 
@@ -22,7 +15,5 @@ export async function proxy(request) {
 }
 
 export const config = {
-  matcher: [
-    "/dashboard/:path*",
-  ],
+  matcher: ["/dashboard/:path*"],
 };

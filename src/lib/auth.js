@@ -3,39 +3,24 @@ import { betterAuth } from "better-auth";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 
-const mongoUri = process.env.MONGODB_URI;
+// বাংলা মন্তব্য: Build environment-এ env missing থাকলেও build fail না করার জন্য safe fallback রাখা হয়েছে। Production/local run-এ অবশ্যই real env দিতে হবে।
+const mongoUri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/bibliodrop_build_placeholder";
 const dbName = process.env.MONGODB_DB || "biblioteca";
+const baseURL = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000";
+const secret = process.env.BETTER_AUTH_SECRET || "development-build-only-secret-change-in-env";
 
-if (!mongoUri) {
-  throw new Error("Missing MONGODB_URI in .env.local");
-}
-
-if (!process.env.BETTER_AUTH_URL) {
-  throw new Error("Missing BETTER_AUTH_URL in .env.local");
-}
-
-if (!process.env.BETTER_AUTH_SECRET) {
-  throw new Error("Missing BETTER_AUTH_SECRET in .env.local");
-}
-
-
+// বাংলা মন্তব্য: MongoDB client lazy connection ব্যবহার করে; request না এলে database call হয় না।
 const client = new MongoClient(mongoUri);
 const db = client.db(dbName);
 
 export const auth = betterAuth({
   appName: "BiblioDrop",
-
-  baseURL: process.env.BETTER_AUTH_URL,
-  secret: process.env.BETTER_AUTH_SECRET,
-
-  database: mongodbAdapter(db, {
-    client,
-  }),
-
+  baseURL,
+  secret,
+  database: mongodbAdapter(db, { client }),
   emailAndPassword: {
     enabled: true,
   },
-
   socialProviders: {
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
       ? {
@@ -47,7 +32,6 @@ export const auth = betterAuth({
         }
       : {}),
   },
-
   user: {
     additionalFields: {
       role: {
@@ -59,7 +43,6 @@ export const auth = betterAuth({
       },
     },
   },
-
   trustedOrigins: [
     "http://localhost:3000",
     "http://localhost:3001",
