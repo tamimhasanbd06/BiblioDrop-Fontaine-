@@ -8,7 +8,7 @@ export const metadata = {
   description: "Your Local Library, Delivered",
 };
 
-// বাংলা মন্তব্য: Google font network dependency বাদ রাখা হয়েছে যাতে offline/build environment-এ error না হয়।
+
 export default function RootLayout({ children }) {
   return (
     <html

@@ -163,9 +163,9 @@ export default function BookDetailsPage() {
     }
   };
 
-  // Wishlist Button Action Handler
+
   const handleWishlistClick = () => {
-    // If user is not logged in -> Redirect to sign in page
+
     if (!isLoggedIn) {
       return router.push(`/signin?redirect=/books/${id}`);
     }
@@ -359,7 +359,6 @@ export default function BookDetailsPage() {
         <ReviewsSection reviews={reviews} reviewsLoading={reviewsLoading} isLoggedIn={isLoggedIn} bookId={id} />
       </section>
 
-      {/* ================= DELETE CONFIRMATION MODAL ================= */}
       {isDeleteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6 text-center shadow-2xl">
@@ -374,7 +373,6 @@ export default function BookDetailsPage() {
         </div>
       )}
 
-      {/* ================= EDIT MODAL ================= */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
           <div className="my-8 w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl md:p-8">
@@ -440,7 +438,7 @@ export default function BookDetailsPage() {
   );
 }
 
-// Subcomponents helper wrappers
+
 function Badge({ icon, text, color }) { 
   const cls = color === "yellow" ? "bg-yellow-500/10 text-yellow-300 ring-yellow-400/20" : color === "emerald" ? "bg-emerald-500/10 text-emerald-300 ring-emerald-400/20" : "bg-blue-500/10 text-blue-300 ring-blue-400/20"; 
   return <div className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold ring-1 ${cls}`}>{icon}{text}</div>; 

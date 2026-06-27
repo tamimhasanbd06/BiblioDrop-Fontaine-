@@ -6,7 +6,6 @@ import Link from "next/link";
 import { FiArrowLeft, FiMessageCircle, FiStar } from "react-icons/fi";
 import { serverApi } from "@/lib/api";
 
-// বাংলা মন্তব্য: Verified review submit page; backend Delivered delivery status verify করে।
 export default function ReviewPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -15,7 +14,7 @@ export default function ReviewPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // বাংলা মন্তব্য: Review submit request protected API-তে পাঠানো হচ্ছে।
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {

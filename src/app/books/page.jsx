@@ -18,7 +18,7 @@ import {
 } from "react-icons/fi";
 import { publicApi, serverApi, formatMoney } from "@/lib/api";
 
-// বাংলা মন্তব্য: useSearchParams ব্যবহার করার জন্য Suspense wrapper।
+
 export default function BrowseBooksPage() {
   return (
     <Suspense fallback={<BrowseSkeleton />}>
@@ -27,12 +27,12 @@ export default function BrowseBooksPage() {
   );
 }
 
-// বাংলা মন্তব্য: Public browse page যেখানে search/filter/sort/pagination server থেকে হয়।
+
 function BrowseBooksContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // বাংলা মন্তব্য: Server থেকে আসা বই, pagination ও category state রাখা হচ্ছে।
+
   const [books, setBooks] = useState([]);
   const [pagination, setPagination] = useState({
     totalBooks: 0,
@@ -42,7 +42,7 @@ function BrowseBooksContent() {
   });
   const [categories, setCategories] = useState(["All"]);
 
-  // বাংলা মন্তব্য: Filter/search state রাখা হচ্ছে যাতে URL category click এবং user input একসাথে কাজ করে।
+
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState(searchParams.get("category") || "All");
   const [availability, setAvailability] = useState("All");
@@ -51,18 +51,18 @@ function BrowseBooksContent() {
   const [maxFee, setMaxFee] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // বাংলা মন্তব্য: Loading/error/payment state আলাদা রাখা হচ্ছে যাতে infinite loop না হয়।
+
   const [loading, setLoading] = useState(true);
   const [paymentBookId, setPaymentBookId] = useState("");
   const [error, setError] = useState("");
   const booksPerPage = 12;
 
   useEffect(() => {
-    // বাংলা মন্তব্য: Home category card থেকে আসা query param category filter-এ sync করা হচ্ছে।
+  
     setCategory(searchParams.get("category") || "All");
   }, [searchParams]);
 
-  // বাংলা মন্তব্য: User selected filter অনুযায়ী query string তৈরি হচ্ছে।
+ 
   const queryString = useMemo(() => {
     const params = new URLSearchParams({
       page: String(currentPage),
@@ -80,7 +80,7 @@ function BrowseBooksContent() {
   }, [currentPage, booksPerPage, sortBy, search, category, availability, minFee, maxFee]);
 
   useEffect(() => {
-    // বাংলা মন্তব্য: Browse books API থেকে paginated data fetch করা হচ্ছে।
+  
     const fetchBooks = async () => {
       try {
         setLoading(true);
@@ -108,7 +108,7 @@ function BrowseBooksContent() {
   }, [queryString]);
 
   useEffect(() => {
-    // বাংলা মন্তব্য: Category filter dropdown-এর জন্য dynamic categories আনা হচ্ছে।
+
     publicApi("/categories")
       .then((data) => setCategories(["All", ...(data.categories || [])]))
       .catch(() =>
@@ -117,11 +117,10 @@ function BrowseBooksContent() {
   }, []);
 
   useEffect(() => {
-    // বাংলা মন্তব্য: Filter change হলে page আবার ১ নম্বরে যাচ্ছে; queryString effect data আনবে।
+
     setCurrentPage(1);
   }, [search, category, availability, minFee, maxFee, sortBy]);
 
-  // বাংলা মন্তব্য: সব filter reset করা হচ্ছে।
   const resetFilters = () => {
     setSearch("");
     setCategory("All");
@@ -133,7 +132,7 @@ function BrowseBooksContent() {
     router.replace("/books");
   };
 
-  // বাংলা মন্তব্য: Browse card থেকেই Stripe checkout শুরু করা হচ্ছে। শুধু logged-in reader payment করতে পারবে।
+
   const handleRequestDelivery = async (book) => {
     try {
       setPaymentBookId(book._id);
@@ -152,7 +151,7 @@ function BrowseBooksContent() {
     } catch (err) {
       const message = err.message || "Payment checkout failed.";
 
-      // বাংলা মন্তব্য: User login না থাকলে sign in page-এ পাঠানো হচ্ছে।
+।
       if (message.toLowerCase().includes("unauthorized") || message.toLowerCase().includes("token")) {
         router.push(`/signin?redirect=/books`);
         return;
@@ -250,7 +249,7 @@ function BrowseBooksContent() {
   );
 }
 
-// বাংলা মন্তব্য: Book card grid item UI; এখান থেকেই details এবং Stripe request delivery করা যায়।
+
 function BookCard({ book, onRequestDelivery, isPaying }) {
   const router = useRouter();
   const image = book.image || book.coverImage || book.imageUrl || "/placeholder-book.jpg";
@@ -325,7 +324,7 @@ function BookCard({ book, onRequestDelivery, isPaying }) {
   );
 }
 
-// বাংলা মন্তব্য: Loading skeleton cards।
+
 function BrowseSkeleton() {
   return (
     <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
@@ -343,7 +342,7 @@ function BrowseSkeleton() {
   );
 }
 
-// বাংলা মন্তব্য: কোনো book না থাকলে empty state।
+
 function EmptyState() {
   return (
     <div className="mx-auto max-w-xl rounded-[2rem] border border-white/10 bg-white/[0.04] p-10 text-center">

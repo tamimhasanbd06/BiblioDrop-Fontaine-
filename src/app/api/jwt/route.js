@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const cookieName = process.env.JWT_COOKIE_NAME || "bd_token";
 
-// বাংলা মন্তব্য: Better Auth session থেকে backend JWT cookie তৈরি করা হচ্ছে।
+
 export async function POST() {
   try {
     const { auth } = await import("@/lib/auth");

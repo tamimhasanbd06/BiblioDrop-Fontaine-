@@ -84,7 +84,7 @@ export default function LoginPage() {
 
       setSuccess("Login successful.");
 
-      // বাংলা মন্তব্য: Better Auth login সফল হলে backend protected API-এর জন্য JWT cookie তৈরি করা হচ্ছে।
+      // JWT cookie তৈরি করা হচ্ছে backend protected API-এর জন্য
       await fetch("/api/jwt", { method: "POST", credentials: "include" });
 
       await redirectByRole();
@@ -101,9 +101,10 @@ export default function LoginPage() {
       setSuccess("");
       setGoogleLoading(true);
 
+      // সফল লগইনের পর সরাসরি হোম পেজে ("/") রিডাইরেক্ট করার জন্য callbackURL কনফিগার করা হয়েছে
       const { data, error } = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/auth/sync?next=/",
+        callbackURL: "/", 
         errorCallbackURL: "/signin",
       });
 
@@ -112,8 +113,7 @@ export default function LoginPage() {
         return;
       }
 
-      // Usually Better Auth redirects automatically for social login.
-      // Google users will use the default role from auth.js: "user".
+      setSuccess("Redirecting to Google...");
     } catch (err) {
       setError(err?.message || "Google login failed. Please try again.");
     } finally {
@@ -168,7 +168,7 @@ export default function LoginPage() {
               />
             </div>
 
-            <div className="mt-8 hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 shadow-2xl shadow-blue-950/20 backdrop-blur-xl lg:block">
+            <div className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 shadow-2xl shadow-blue-950/20 backdrop-blur-xl lg:block">
               <div className="flex items-start gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-yellow-500/10 text-yellow-300">
                   <FiStar />

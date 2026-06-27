@@ -105,7 +105,6 @@ export default function RegisterPage() {
 
       setSuccess("Account created successfully.");
 
-      // বাংলা মন্তব্য: Signup successful হলে JWT cookie তৈরি করা হচ্ছে।
       await fetch("/api/jwt", { method: "POST", credentials: "include" });
 
       router.push("/");
@@ -134,7 +133,6 @@ export default function RegisterPage() {
         return;
       }
 
-      // Usually Better Auth redirects automatically for social login.
     } catch (err) {
       setError(err?.message || "Google sign up failed. Please try again.");
     } finally {

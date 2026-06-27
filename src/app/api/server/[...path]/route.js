@@ -1,4 +1,4 @@
-// বাংলা মন্তব্য: Next.js proxy route protected backend API call-এ JWT cookie forward করে।
+
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 

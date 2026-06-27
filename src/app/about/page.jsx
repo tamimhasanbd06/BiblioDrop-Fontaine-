@@ -34,13 +34,13 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-[#041032] text-slate-100 p-6 md:p-12 transition-colors duration-300 overflow-hidden relative">
       
-      {/* Decorative Background Glows */}
+   
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
 
       <section className="max-w-5xl mx-auto space-y-16 relative z-10">
         
-        {/* Hero Identity Section */}
+
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <span className="text-xs font-bold uppercase tracking-widest text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
             Our Mission
@@ -53,7 +53,6 @@ export default function AboutPage() {
           </p>
         </div>
 
-        {/* The Problem & The Solution Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-[#0a1941]/40 backdrop-blur-md rounded-2xl p-8 border border-slate-800/80 space-y-3">
             <h3 className="text-xl font-bold text-slate-200">The Modern Barrier</h3>
@@ -70,7 +69,7 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Core Values / Platform Architecture Section */}
+      
         <div className="space-y-8">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-white tracking-tight">Ecosystem Architecture</h2>
@@ -96,7 +95,7 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Action Driven Call-To-Action (CTA) */}
+
         <div className="bg-gradient-to-r from-blue-600/80 to-indigo-600/80 backdrop-blur-md rounded-2xl p-8 text-center space-y-6 border border-blue-500/30 shadow-2xl shadow-indigo-950/40 max-w-4xl mx-auto">
           <div className="space-y-2">
             <h2 className="text-2xl md:text-3xl font-black text-white">Ready to explore the community shelves?</h2>

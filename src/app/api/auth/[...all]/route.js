@@ -1,7 +1,7 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// বাংলা মন্তব্য: Better Auth handler lazy import করা হচ্ছে যাতে build-time MongoDB handle open না হয়।
+
 async function getHandlers() {
   const [{ auth }, { toNextJsHandler }] = await Promise.all([
     import("@/lib/auth"),

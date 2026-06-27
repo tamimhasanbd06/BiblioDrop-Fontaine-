@@ -1,15 +1,15 @@
-// বাংলা মন্তব্য: Better Auth configuration একই MongoDB database ব্যবহার করছে।
+
 import { betterAuth } from "better-auth";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 
-// বাংলা মন্তব্য: Build environment-এ env missing থাকলেও build fail না করার জন্য safe fallback রাখা হয়েছে। Production/local run-এ অবশ্যই real env দিতে হবে।
+
 const mongoUri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/bibliodrop_build_placeholder";
 const dbName = process.env.MONGODB_DB || "biblioteca";
 const baseURL = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000";
 const secret = process.env.BETTER_AUTH_SECRET || "development-build-only-secret-change-in-env";
 
-// বাংলা মন্তব্য: MongoDB client lazy connection ব্যবহার করে; request না এলে database call হয় না।
+
 const client = new MongoClient(mongoUri);
 const db = client.db(dbName);
 

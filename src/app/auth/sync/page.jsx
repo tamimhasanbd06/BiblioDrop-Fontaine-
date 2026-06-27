@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-// বাংলা মন্তব্য: useSearchParams Suspense boundary ছাড়া build error দিতে পারে, তাই wrapper ব্যবহার করা হচ্ছে।
+
 export default function AuthSyncPage() {
   return (
     <Suspense fallback={<SyncLoading message="Securing your session..." />}>
@@ -12,7 +12,7 @@ export default function AuthSyncPage() {
   );
 }
 
-// বাংলা মন্তব্য: Better Auth session থেকে JWT cookie তৈরি করার client page।
+
 function AuthSyncContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -23,7 +23,7 @@ function AuthSyncContent() {
   useEffect(() => {
     let active = true;
 
-    // বাংলা মন্তব্য: Session sync একবার করা হচ্ছে; cleanup flag infinite loop/state update prevent করে।
+  
     const syncJWT = async () => {
       try {
         const response = await fetch("/api/jwt", { method: "POST", credentials: "include" });
@@ -52,7 +52,7 @@ function AuthSyncContent() {
   return <SyncLoading message={message} />;
 }
 
-// বাংলা মন্তব্য: Auth sync loading UI existing dark theme অনুযায়ী রাখা হয়েছে।
+
 function SyncLoading({ message }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-white">
